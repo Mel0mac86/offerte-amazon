@@ -1,0 +1,14 @@
+{
+  "name": "Offerte Amazon (Expo)",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "forwardPorts": [8081, 19000, 19006],
+  "postCreateCommand": "npm install",
+  "postAttachCommand": {
+    "messaggio": "echo '✅ Pronto! Ora scrivi:  npx expo start --tunnel  e apri l URL exp:// in Expo Go'"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["expo.vscode-expo-tools"]
+    }
+  }
+}

@@ -12,17 +12,30 @@ I feed predefiniti verificati sono **SmartWorld** e **TuttoAndroid** (offerte Am
 
 > In alternativa (opzionale) puoi collegare la **PA-API ufficiale** di Amazon (richiede account Affiliato approvato) inserendo le chiavi in `app.json`: vedi più sotto.
 
-## Come provarla sull'iPhone (in 5 minuti)
+## Provarla con il SOLO iPhone (senza computer)
 
-1. Installa **Node.js 18+** sul computer.
-2. Sul tuo iPhone installa l'app gratuita **Expo Go** dall'App Store.
-3. Nella cartella del progetto:
+Serve un "motore" (Node + bundler) che l'iPhone non ha: lo usiamo in cloud via **GitHub Codespaces** (gratis) e apriamo l'app su **Expo Go**. Il repo include un `.devcontainer` che installa tutto da solo.
+
+1. Installa **Expo Go** dall'App Store.
+2. In **Safari**: `github.com/Mel0mac86/offerte-amazon` → **Code** → **Codespaces** → *Create codespace* sul branch `claude/amazon-deals-iphone-app-fq72uf` (attendi: fa `npm install` da solo).
+3. Nel **Terminal** del Codespace scrivi un solo comando:
+   ```bash
+   npx expo start --tunnel
+   ```
+4. Copia l'indirizzo `exp://…exp.direct` che compare → in **Expo Go** tocca **"Enter URL manually"** e incollalo.
+5. L'app si apre sull'iPhone. Vai su **Impostazioni → Attiva notifiche** per la notifica di prova.
+
+> Le notifiche **ad app chiusa** sono limitate in Expo Go: per quelle serve una build EAS (vedi sotto).
+
+## Provarla da computer (Mac/Windows)
+
+1. Installa **Node.js 18+** e **Expo Go** sull'iPhone (stessa Wi‑Fi).
+2. Nella cartella del progetto:
    ```bash
    npm install
    npx expo start
    ```
-4. Inquadra il **QR code** che appare nel terminale con la fotocamera dell'iPhone → si apre in Expo Go.
-5. Vai su **Impostazioni → Attiva notifiche**: concedi il permesso e riceverai una notifica di prova.
+3. Inquadra il **QR code** con la fotocamera dell'iPhone → si apre in Expo Go.
 
 > Le notifiche push **in background** funzionano al meglio in una build di sviluppo/produzione (`npx expo run:ios` o EAS Build). In **Expo Go** le notifiche locali e il pulsante "Controlla offerte adesso" funzionano comunque.
 
