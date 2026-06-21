@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Offerte Amazon",
+    "slug": "offerte-amazon",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "offerteamazon",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0F1115"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.offerteamazon.app",
+      "infoPlist": {
+        "UIBackgroundModes": ["fetch"]
+      }
+    },
+    "android": {
+      "package": "com.offerteamazon.app"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#FF9900"
+        }
+      ]
+    ],
+    "extra": {
+      "amazonAffiliateTag": "",
+      "paapiAccessKey": "",
+      "paapiSecretKey": ""
+    }
+  }
+}

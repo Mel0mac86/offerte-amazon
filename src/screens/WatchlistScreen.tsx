@@ -1,0 +1,109 @@
+import React from 'react';
+import { FlatList, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useApp } from '@/context/AppContext';
+import { EmptyState } from '@/components/EmptyState';
+import { colors, radius, spacing } from '@/theme';
+import { formatEuro, timeAgo } from '@/utils/format';
+import { withAffiliateTag } from '@/services/amazonProvider';
+
+export function WatchlistScreen() {
+  const { watchlist, deals, toggleWatch } = useApp();
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <Text style={styles.header}>Preferiti</Text>
+      <FlatList
+        data={watchlist}
+        keyExtractor={(item) => item.dealId}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <EmptyState
+            icon="★"
+            title="Nessun preferito"
+            subtitle="Tocca la stella su un'offerta per seguirne il prezzo e ricevere un avviso quando cala."
+          />
+        }
+        renderItem={({ item }) => {
+          const current = deals.find((d) => d.id === item.dealId)?.currentPrice ?? item.priceWhenAdded;
+          const drop = Math.round((1 - current / item.priceWhenAdded) * 100);
+          return (
+            <Pressable
+              style={styles.row}
+              onPress={() => Linking.openURL(withAffiliateTag(item.url)).catch(() => {})}
+            >
+              <Image source={{ uri: item.imageUrl }} style={styles.image} />
+              <View style={styles.info}>
+                <Text style={styles.title} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.price}>{formatEuro(current)}</Text>
+                  {drop > 0 ? (
+                    <Text style={styles.drop}>▼ -{drop}%</Text>
+                  ) : (
+                    <Text style={styles.flat}>salvato a {formatEuro(item.priceWhenAdded)}</Text>
+                  )}
+                </View>
+                <Text style={styles.meta}>Aggiunto {timeAgo(item.addedAt)}</Text>
+              </View>
+              <Pressable
+                hitSlop={10}
+                onPress={() =>
+                  toggleWatch({
+                    id: item.dealId,
+                    title: item.title,
+                    imageUrl: item.imageUrl,
+                    url: item.url,
+                    currentPrice: item.priceWhenAdded,
+                    listPrice: item.priceWhenAdded,
+                    category: 'Tutte',
+                    isPriceError: false,
+                    detectedAt: item.addedAt,
+                  })
+                }
+                style={styles.removeBtn}
+              >
+                <Text style={styles.remove}>✕</Text>
+              </Pressable>
+            </Pressable>
+          );
+        }}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
+  header: {
+    color: colors.text,
+    fontSize: 28,
+    fontWeight: '800',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  list: { paddingBottom: 24 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.sm,
+  },
+  image: { width: 64, height: 64, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
+  info: { flex: 1, paddingHorizontal: spacing.md },
+  title: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, marginTop: 2 },
+  price: { color: colors.success, fontSize: 16, fontWeight: '800' },
+  drop: { color: colors.success, fontSize: 12, fontWeight: '700' },
+  flat: { color: colors.textMuted, fontSize: 12 },
+  meta: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  removeBtn: { padding: spacing.sm },
+  remove: { color: colors.textMuted, fontSize: 16, fontWeight: '700' },
+});

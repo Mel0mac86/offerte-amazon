@@ -1,0 +1,105 @@
+import React from 'react';
+import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Deal, discountPercent } from '@/types';
+import { colors, radius, spacing } from '@/theme';
+import { formatEuro, timeAgo } from '@/utils/format';
+import { withAffiliateTag } from '@/services/amazonProvider';
+
+interface Props {
+  deal: Deal;
+  watched: boolean;
+  onToggleWatch: (deal: Deal) => void;
+}
+
+export function DealCard({ deal, watched, onToggleWatch }: Props) {
+  const discount = discountPercent(deal);
+
+  const open = () => {
+    Linking.openURL(withAffiliateTag(deal.url)).catch(() => {});
+  };
+
+  return (
+    <Pressable style={styles.card} onPress={open}>
+      <Image source={{ uri: deal.imageUrl }} style={styles.image} />
+      <View style={styles.body}>
+        <View style={styles.badgeRow}>
+          {deal.isPriceError && (
+            <View style={[styles.badge, { backgroundColor: colors.errorBadge }]}>
+              <Text style={styles.badgeText}>ERRORE PREZZO?</Text>
+            </View>
+          )}
+          <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+            <Text style={[styles.badgeText, { color: '#1A1206' }]}>-{discount}%</Text>
+          </View>
+        </View>
+
+        <Text style={styles.title} numberOfLines={2}>
+          {deal.title}
+        </Text>
+
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>{formatEuro(deal.currentPrice)}</Text>
+          <Text style={styles.listPrice}>{formatEuro(deal.listPrice)}</Text>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.meta}>
+            {deal.category} · {timeAgo(deal.detectedAt)}
+          </Text>
+          <Pressable
+            hitSlop={10}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onToggleWatch(deal);
+            }}
+            style={styles.heartBtn}
+          >
+            <Text style={[styles.heart, watched && styles.heartActive]}>
+              {watched ? '★' : '☆'}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  image: {
+    width: 104,
+    height: 104,
+    backgroundColor: colors.surfaceAlt,
+  },
+  body: { flex: 1, padding: spacing.md },
+  badgeRow: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.xs },
+  badge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.3 },
+  title: { color: colors.text, fontSize: 14, fontWeight: '600', lineHeight: 19 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, marginTop: spacing.xs },
+  price: { color: colors.success, fontSize: 18, fontWeight: '800' },
+  listPrice: { color: colors.textMuted, fontSize: 13, textDecorationLine: 'line-through' },
+  footer: {
+    marginTop: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  meta: { color: colors.textMuted, fontSize: 11 },
+  heartBtn: { paddingLeft: spacing.md },
+  heart: { fontSize: 20, color: colors.textMuted },
+  heartActive: { color: colors.accent },
+});
