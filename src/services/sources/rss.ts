@@ -1,6 +1,17 @@
 import { XMLParser } from 'fast-xml-parser';
+import { Platform } from 'react-native';
 import { Category, Deal } from '@/types';
 import { FeedSource } from '@/services/sources/feeds';
+
+// Nel browser (web/PWA) le richieste ai feed sono bloccate da CORS: le passiamo
+// attraverso un proxy pubblico che aggiunge gli header CORS. Su iOS/Android nativo
+// non serve e si scarica direttamente.
+function feedUrl(url: string): string {
+  if (Platform.OS === 'web') {
+    return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -229,11 +240,14 @@ function mapItem(item: Record<string, unknown>, source: FeedSource): Deal | null
 /** Scarica e converte un feed RSS in offerte. In caso di errore ritorna []. */
 export async function fetchFeed(source: FeedSource, signal?: AbortSignal): Promise<Deal[]> {
   try {
-    const res = await fetch(source.url, {
-      headers: {
-        'User-Agent': 'OfferteAmazon/1.0 (+app RSS reader)',
-        Accept: 'application/rss+xml, application/xml, text/xml',
-      },
+    const res = await fetch(feedUrl(source.url), {
+      headers:
+        Platform.OS === 'web'
+          ? undefined
+          : {
+              'User-Agent': 'OfferteAmazon/1.0 (+app RSS reader)',
+              Accept: 'application/rss+xml, application/xml, text/xml',
+            },
       signal,
     });
     if (!res.ok) return [];

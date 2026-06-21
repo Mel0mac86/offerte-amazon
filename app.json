@@ -20,6 +20,19 @@
     "android": {
       "package": "com.offerteamazon.app"
     },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "name": "Offerte Amazon",
+      "shortName": "Offerte",
+      "themeColor": "#0F1115",
+      "backgroundColor": "#0F1115",
+      "display": "standalone",
+      "description": "Offerte ed errori di prezzo Amazon.it e altri negozi"
+    },
+    "experiments": {
+      "baseUrl": "/offerte-amazon"
+    },
     "plugins": [
       [
         "expo-notifications",

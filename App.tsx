@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
@@ -16,6 +16,7 @@ function Gate() {
 
   // Quando l'utente tocca una notifica, apre il prodotto su Amazon.it.
   useEffect(() => {
+    if (Platform.OS === 'web') return;
     responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
       const url = response.notification.request.content.data?.url as string | undefined;
       if (url) Linking.openURL(withAffiliateTag(url)).catch(() => {});

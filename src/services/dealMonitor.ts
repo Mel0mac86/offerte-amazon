@@ -1,11 +1,14 @@
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
+import { Platform } from 'react-native';
 import { activeProvider } from '@/services/amazonProvider';
 import { storage } from '@/services/storage';
 import { sendLocalNotification } from '@/services/notifications';
 import { DEFAULT_FILTERS, discountPercent } from '@/types';
 import { formatEuro } from '@/utils/format';
 import { appendPoint } from '@/services/priceHistory';
+
+const isNative = Platform.OS !== 'web';
 
 export const DEAL_CHECK_TASK = 'offerte-amazon-deal-check';
 
@@ -102,22 +105,26 @@ export async function runDealCheck(): Promise<number> {
 }
 
 // Definizione del task di background (eseguito dal sistema operativo).
-TaskManager.defineTask(DEAL_CHECK_TASK, async () => {
-  try {
-    const count = await runDealCheck();
-    return count > 0
-      ? BackgroundFetch.BackgroundFetchResult.NewData
-      : BackgroundFetch.BackgroundFetchResult.NoData;
-  } catch {
-    return BackgroundFetch.BackgroundFetchResult.Failed;
-  }
-});
+// Solo su piattaforme native: sul web il background fetch non esiste.
+if (isNative) {
+  TaskManager.defineTask(DEAL_CHECK_TASK, async () => {
+    try {
+      const count = await runDealCheck();
+      return count > 0
+        ? BackgroundFetch.BackgroundFetchResult.NewData
+        : BackgroundFetch.BackgroundFetchResult.NoData;
+    } catch {
+      return BackgroundFetch.BackgroundFetchResult.Failed;
+    }
+  });
+}
 
 /**
  * Registra il controllo periodico in background.
  * NB: su iOS l'intervallo è gestito dal sistema (minimo ~15 min, non garantito).
  */
 export async function registerBackgroundCheck(): Promise<void> {
+  if (!isNative) return;
   try {
     const status = await BackgroundFetch.getStatusAsync();
     if (
@@ -137,6 +144,7 @@ export async function registerBackgroundCheck(): Promise<void> {
 }
 
 export async function unregisterBackgroundCheck(): Promise<void> {
+  if (!isNative) return;
   try {
     const registered = await TaskManager.isTaskRegisteredAsync(DEAL_CHECK_TASK);
     if (registered) {
