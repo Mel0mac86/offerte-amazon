@@ -32,7 +32,11 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /** Invia subito una notifica locale. */
-export async function sendLocalNotification(title: string, body: string, data?: object): Promise<void> {
+export async function sendLocalNotification(
+  title: string,
+  body: string,
+  data?: Record<string, unknown>,
+): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: { title, body, data: data ?? {}, sound: true },
     trigger: null, // immediata

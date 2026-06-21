@@ -12,7 +12,7 @@ import '@/services/dealMonitor';
 
 function Gate() {
   const { loading } = useApp();
-  const responseListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   // Quando l'utente tocca una notifica, apre il prodotto su Amazon.it.
   useEffect(() => {
@@ -21,9 +21,7 @@ function Gate() {
       if (url) Linking.openURL(withAffiliateTag(url)).catch(() => {});
     });
     return () => {
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
+      responseListener.current?.remove();
     };
   }, []);
 
