@@ -17,6 +17,7 @@ import {
   registerBackgroundCheck,
   unregisterBackgroundCheck,
 } from '@/services/dealMonitor';
+import { recordPrices, seedHistory } from '@/services/priceHistory';
 
 interface AppState {
   loading: boolean;
@@ -41,10 +42,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [watchlist, setWatchlist] = useState<WatchItem[]>([]);
 
+  // Registra i prezzi correnti nello storico dei prodotti seguiti.
+  const recordWatchPrices = useCallback((data: Deal[]) => {
+    setWatchlist((prev) => {
+      const priceMap = new Map(data.map((d) => [d.id, d.currentPrice] as const));
+      const next = recordPrices(prev, (id) => priceMap.get(id));
+      if (next !== prev) storage.saveWatchlist(next);
+      return next;
+    });
+  }, []);
+
   const refreshDeals = useCallback(async () => {
     const data = await activeProvider.fetchDeals(filters);
     setDeals(data);
-  }, [filters]);
+    recordWatchPrices(data);
+  }, [filters, recordWatchPrices]);
 
   // Caricamento iniziale da storage
   useEffect(() => {
@@ -56,7 +68,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ]);
       setSettings(s);
       setFiltersState(f);
-      setWatchlist(w);
+      // Normalizza i preferiti salvati prima dell'introduzione dello storico.
+      setWatchlist(
+        w.map((item) => ({
+          ...item,
+          history: item.history?.length ? item.history : seedHistory(item.priceWhenAdded, item.priceWhenAdded),
+        })),
+      );
       setLoading(false);
     })();
   }, []);
@@ -67,13 +85,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     (async () => {
       const data = await activeProvider.fetchDeals(filters);
-      if (active) setDeals(data);
+      if (active) {
+        setDeals(data);
+        recordWatchPrices(data);
+      }
     })();
     storage.saveFilters(filters);
     return () => {
       active = false;
     };
-  }, [filters, loading]);
+  }, [filters, loading, recordWatchPrices]);
 
   const setFilters = useCallback((f: DealFilters) => setFiltersState(f), []);
 
@@ -122,6 +143,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               url: deal.url,
               priceWhenAdded: deal.currentPrice,
               addedAt: Date.now(),
+              history: seedHistory(deal.currentPrice, deal.listPrice),
             },
             ...prev,
           ];

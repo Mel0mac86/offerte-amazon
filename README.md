@@ -23,6 +23,7 @@ App iPhone (React Native + Expo) per trovare **offerte** e possibili **errori di
 - 🏷️ **Offerte**: elenco con sconto %, prezzo barrato, badge "ERRORE PREZZO?", pull-to-refresh.
 - 🔎 **Filtri**: ricerca testo, categoria, sconto minimo, solo errori di prezzo.
 - ★ **Preferiti/Watchlist**: segui un prodotto e ricevi un avviso quando il prezzo cala.
+- 📈 **Storico prezzi**: mini grafico per ogni preferito con prezzo minimo/attuale/massimo (il minimo è evidenziato in verde).
 - 🔔 **Notifiche locali on/off**: soglia di sconto configurabile, avvisi per errori di prezzo e cali dei preferiti.
 - 🔗 Tocco su offerta/notifica → apre il prodotto su Amazon.it (con tag affiliato se configurato).
 - 💾 Tutto salvato in locale (AsyncStorage), nessun server richiesto.
@@ -37,12 +38,13 @@ src/
   context/AppContext.tsx     Stato globale (offerte, filtri, settings, watchlist)
   navigation/RootNavigator   Tab: Offerte / Preferiti / Impostazioni
   screens/                   DealsScreen, WatchlistScreen, SettingsScreen
-  components/                DealCard, FilterBar, EmptyState
+  components/                DealCard, FilterBar, EmptyState, PriceChart
   services/
     amazonProvider.ts        Provider intercambiabile (Mock + stub PA-API)
     storage.ts               Persistenza AsyncStorage
     notifications.ts         Permessi + notifiche locali
     dealMonitor.ts           Controllo offerte + task background
+    priceHistory.ts          Storico prezzi (registrazione + statistiche)
   data/mockDeals.ts          Dati demo Amazon.it
 ```
 

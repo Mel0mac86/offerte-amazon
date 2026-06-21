@@ -41,6 +41,12 @@ export interface DealFilters {
   query: string;
 }
 
+/** Punto dello storico prezzi: timestamp (ms) e prezzo in euro. */
+export interface PricePoint {
+  t: number;
+  price: number;
+}
+
 export interface WatchItem {
   dealId: string;
   title: string;
@@ -49,6 +55,8 @@ export interface WatchItem {
   /** Prezzo registrato quando il prodotto è stato aggiunto ai preferiti */
   priceWhenAdded: number;
   addedAt: number;
+  /** Storico dei prezzi rilevati nel tempo (ordinato dal più vecchio al più recente) */
+  history: PricePoint[];
 }
 
 export interface AppSettings {

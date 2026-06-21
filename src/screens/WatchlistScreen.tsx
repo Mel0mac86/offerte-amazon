@@ -3,6 +3,7 @@ import { FlatList, Image, Linking, Pressable, StyleSheet, Text, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/context/AppContext';
 import { EmptyState } from '@/components/EmptyState';
+import { PriceChart } from '@/components/PriceChart';
 import { colors, radius, spacing } from '@/theme';
 import { formatEuro, timeAgo } from '@/utils/format';
 import { withAffiliateTag } from '@/services/amazonProvider';
@@ -27,46 +28,60 @@ export function WatchlistScreen() {
         renderItem={({ item }) => {
           const current = deals.find((d) => d.id === item.dealId)?.currentPrice ?? item.priceWhenAdded;
           const drop = Math.round((1 - current / item.priceWhenAdded) * 100);
+          // Storico per il grafico, includendo il prezzo live se più recente.
+          const lastHistory = item.history[item.history.length - 1];
+          const chartHistory =
+            lastHistory && lastHistory.price !== current
+              ? [...item.history, { t: Date.now(), price: current }]
+              : item.history;
+
           return (
-            <Pressable
-              style={styles.row}
-              onPress={() => Linking.openURL(withAffiliateTag(item.url)).catch(() => {})}
-            >
-              <Image source={{ uri: item.imageUrl }} style={styles.image} />
-              <View style={styles.info}>
-                <Text style={styles.title} numberOfLines={2}>
-                  {item.title}
-                </Text>
-                <View style={styles.priceRow}>
-                  <Text style={styles.price}>{formatEuro(current)}</Text>
-                  {drop > 0 ? (
-                    <Text style={styles.drop}>▼ -{drop}%</Text>
-                  ) : (
-                    <Text style={styles.flat}>salvato a {formatEuro(item.priceWhenAdded)}</Text>
-                  )}
-                </View>
-                <Text style={styles.meta}>Aggiunto {timeAgo(item.addedAt)}</Text>
-              </View>
+            <View style={styles.card}>
               <Pressable
-                hitSlop={10}
-                onPress={() =>
-                  toggleWatch({
-                    id: item.dealId,
-                    title: item.title,
-                    imageUrl: item.imageUrl,
-                    url: item.url,
-                    currentPrice: item.priceWhenAdded,
-                    listPrice: item.priceWhenAdded,
-                    category: 'Tutte',
-                    isPriceError: false,
-                    detectedAt: item.addedAt,
-                  })
-                }
-                style={styles.removeBtn}
+                style={styles.topRow}
+                onPress={() => Linking.openURL(withAffiliateTag(item.url)).catch(() => {})}
               >
-                <Text style={styles.remove}>✕</Text>
+                <Image source={{ uri: item.imageUrl }} style={styles.image} />
+                <View style={styles.info}>
+                  <Text style={styles.title} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <View style={styles.priceRow}>
+                    <Text style={styles.price}>{formatEuro(current)}</Text>
+                    {drop > 0 ? (
+                      <Text style={styles.drop}>▼ -{drop}%</Text>
+                    ) : (
+                      <Text style={styles.flat}>salvato a {formatEuro(item.priceWhenAdded)}</Text>
+                    )}
+                  </View>
+                  <Text style={styles.meta}>Aggiunto {timeAgo(item.addedAt)}</Text>
+                </View>
+                <Pressable
+                  hitSlop={10}
+                  onPress={() =>
+                    toggleWatch({
+                      id: item.dealId,
+                      title: item.title,
+                      imageUrl: item.imageUrl,
+                      url: item.url,
+                      currentPrice: item.priceWhenAdded,
+                      listPrice: item.priceWhenAdded,
+                      category: 'Tutte',
+                      isPriceError: false,
+                      detectedAt: item.addedAt,
+                    })
+                  }
+                  style={styles.removeBtn}
+                >
+                  <Text style={styles.remove}>✕</Text>
+                </Pressable>
               </Pressable>
-            </Pressable>
+
+              <View style={styles.chartSection}>
+                <Text style={styles.chartTitle}>Storico prezzi</Text>
+                <PriceChart history={chartHistory} />
+              </View>
+            </View>
           );
         }}
       />
@@ -85,9 +100,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   list: { paddingBottom: 24 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  card: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -95,6 +108,22 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
     padding: spacing.sm,
+  },
+  topRow: { flexDirection: 'row', alignItems: 'center' },
+  chartSection: {
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingHorizontal: spacing.xs,
+  },
+  chartTitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: spacing.xs,
   },
   image: { width: 64, height: 64, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
   info: { flex: 1, paddingHorizontal: spacing.md },

@@ -5,6 +5,7 @@ import { storage } from '@/services/storage';
 import { sendLocalNotification } from '@/services/notifications';
 import { DEFAULT_FILTERS, discountPercent } from '@/types';
 import { formatEuro } from '@/utils/format';
+import { appendPoint } from '@/services/priceHistory';
 
 export const DEAL_CHECK_TASK = 'offerte-amazon-deal-check';
 
@@ -57,12 +58,24 @@ export async function runDealCheck(): Promise<number> {
     await storage.saveSeenDealIds(merged);
   }
 
-  // Controllo cali di prezzo sulla watchlist
-  if (settings.notifyWatchlistDrops) {
-    const watchlist = await storage.getWatchlist();
-    for (const item of watchlist) {
+  // Controllo prezzi sulla watchlist: registra sempre lo storico e, se abilitato,
+  // notifica i cali di prezzo.
+  const watchlist = await storage.getWatchlist();
+  if (watchlist.length > 0) {
+    let watchlistChanged = false;
+    const updated = [...watchlist];
+    for (let i = 0; i < updated.length; i++) {
+      const item = updated[i];
       const price = await activeProvider.fetchPrice(item.dealId);
-      if (price != null && price < item.priceWhenAdded) {
+      if (price == null) continue;
+
+      const history = appendPoint(item.history ?? [], price);
+      if (history !== item.history) {
+        updated[i] = { ...item, history };
+        watchlistChanged = true;
+      }
+
+      if (settings.notifyWatchlistDrops && price < item.priceWhenAdded) {
         const drop = Math.round((1 - price / item.priceWhenAdded) * 100);
         if (drop >= 5) {
           await sendLocalNotification(
@@ -73,6 +86,9 @@ export async function runDealCheck(): Promise<number> {
           notificationsSent++;
         }
       }
+    }
+    if (watchlistChanged) {
+      await storage.saveWatchlist(updated);
     }
   }
 
