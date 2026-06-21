@@ -8,7 +8,7 @@ L'app legge **feed RSS pubblici** di community/siti di offerte (pensati per la s
 
 I feed forniscono titolo, immagine, link al negozio e data. L'app legge anche il **contenuto completo dell'articolo** (`content:encoded`) per estrarre, quando presenti, **prezzo**, **sconto %**, **negozio** e **codice coupon**. Se la rete non è disponibile, mostra dei dati demo di esempio per non restare vuota.
 
-I feed predefiniti verificati sono SmartWorld, TuttoAndroid e **GizChina** (multi-negozio e ricco di coupon: Amazon, AliExpress, MediaWorld…). In **Impostazioni → Fonti offerte** puoi attivarli/disattivarli e **aggiungere il feed RSS di qualsiasi altro negozio**.
+I feed predefiniti verificati sono **SmartWorld** e **TuttoAndroid** (offerte Amazon.it). In **Impostazioni → Fonti offerte** puoi attivarli/disattivarli e **aggiungere il feed RSS di qualsiasi altro negozio**.
 
 > In alternativa (opzionale) puoi collegare la **PA-API ufficiale** di Amazon (richiede account Affiliato approvato) inserendo le chiavi in `app.json`: vedi più sotto.
 
@@ -29,10 +29,10 @@ I feed predefiniti verificati sono SmartWorld, TuttoAndroid e **GizChina** (mult
 ## Funzionalità
 
 - 🏷️ **Offerte reali da feed RSS**: titolo, immagine, badge negozio, prezzo e sconto % quando disponibili, pull-to-refresh.
-- 🏬 **Multi-negozio**: Amazon.it, AliExpress, MediaWorld ed altri; fonti attivabili in Impostazioni.
+- 🏬 **Multi-negozio**: Amazon.it ed altri negozi (eBay, MediaWorld…) tramite i feed; fonti attivabili in Impostazioni.
 - ➕ **Feed personalizzati**: aggiungi l'RSS di qualsiasi negozio/sito dall'app.
 - 🎟️ **Codici sconto/coupon**: estratti dagli articoli e copiabili con un tocco.
-- 🔗 **Link diretto al prodotto**: quando l'articolo lo contiene, il tocco apre direttamente la scheda sul negozio (Amazon/AliExpress…), altrimenti l'articolo.
+- 🔗 **Link diretto al prodotto**: quando l'articolo lo contiene, il tocco apre direttamente la scheda sul negozio (Amazon/eBay…), altrimenti l'articolo.
 - 🔎 **Filtri**: ricerca testo, categoria, sconto minimo, solo errori di prezzo, **solo con coupon**.
 - ★ **Preferiti/Watchlist**: segui un prodotto e ricevi un avviso quando il prezzo cala.
 - 📈 **Storico prezzi**: mini grafico per ogni preferito con prezzo minimo/attuale/massimo (il minimo è evidenziato in verde).

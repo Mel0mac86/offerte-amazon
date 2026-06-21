@@ -123,16 +123,13 @@ const KNOWN_STORES = [
   'MediaWorld',
   'Unieuro',
   'Euronics',
-  'AliExpress',
-  'Geekbuying',
-  'Banggood',
   'Comet',
   'Trony',
   'Monclick',
 ];
 
 function detectStore(categories: string[], haystack: string, fallback: string): string {
-  // 1) I siti tipo GizChina mettono il negozio tra le categorie.
+  // 1) Alcuni siti mettono il nome del negozio tra le categorie del feed.
   for (const cat of categories) {
     const c = cat.trim().toLowerCase();
     if (c.includes('amazon')) return 'Amazon.it';
@@ -170,12 +167,11 @@ function firstImage(html: string): string | null {
 }
 
 // Link "accorciati" che puntano sempre a un prodotto.
-const SHORTENERS = /^https?:\/\/(amzn\.to|amzn\.eu|s\.click\.aliexpress\.com|ebay\.us|geni\.us|fas\.st|bit\.ly)\//i;
+const SHORTENERS = /^https?:\/\/(amzn\.to|amzn\.eu|ebay\.us|geni\.us|fas\.st|bit\.ly)\//i;
 
 function isProductLink(u: string): boolean {
   if (SHORTENERS.test(u)) return true;
   if (/amazon\.[a-z.]+\/(?:[^\s]*\/)?(?:dp|gp\/product|gp\/aw\/d)\/[A-Z0-9]/i.test(u)) return true;
-  if (/aliexpress\.[a-z.]+\/item\//i.test(u)) return true;
   if (/ebay\.[a-z.]+\/itm\//i.test(u)) return true;
   return false;
 }

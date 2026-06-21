@@ -28,12 +28,6 @@ export const DEFAULT_FEEDS: FeedSource[] = [
     url: 'https://www.tuttoandroid.net/offerte/feed/',
     defaultStore: 'Amazon.it',
   },
-  {
-    id: 'gizchina',
-    name: 'GizChina.it — Offerte e Coupon',
-    url: 'https://www.gizchina.it/category/offerte/feed/',
-    defaultStore: 'Vari negozi',
-  },
 ];
 
 // Stato runtime (impostato dall'app all'avvio in base alle preferenze salvate).
