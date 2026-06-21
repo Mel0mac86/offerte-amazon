@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { PriceChart } from '@/components/PriceChart';
 import { colors, radius, spacing } from '@/theme';
 import { formatEuro, timeAgo } from '@/utils/format';
-import { withAffiliateTag } from '@/services/amazonProvider';
+import { dealLink } from '@/services/amazonProvider';
 
 export function WatchlistScreen() {
   const { watchlist, deals, toggleWatch } = useApp();
@@ -43,7 +43,11 @@ export function WatchlistScreen() {
             <View style={styles.card}>
               <Pressable
                 style={styles.topRow}
-                onPress={() => Linking.openURL(withAffiliateTag(item.url)).catch(() => {})}
+                onPress={() =>
+                  Linking.openURL(dealLink({ productUrl: item.productUrl ?? null, url: item.url })).catch(
+                    () => {},
+                  )
+                }
               >
                 <Image source={{ uri: item.imageUrl }} style={styles.image} />
                 <View style={styles.info}>
@@ -70,6 +74,7 @@ export function WatchlistScreen() {
                       title: item.title,
                       imageUrl: item.imageUrl,
                       url: item.url,
+                      productUrl: item.productUrl ?? null,
                       currentPrice: item.priceWhenAdded,
                       listPrice: null,
                       discountPct: null,

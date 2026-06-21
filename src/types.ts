@@ -23,8 +23,10 @@ export interface Deal {
   listPrice: number | null;
   /** Sconto % dichiarato dalla fonte, quando non ricavabile dai prezzi */
   discountPct: number | null;
-  /** URL del prodotto/offerta */
+  /** URL dell'articolo/offerta (pagina sorgente) */
   url: string;
+  /** Link diretto al prodotto sul negozio, se estraibile dall'articolo */
+  productUrl: string | null;
   /** Negozio (es. Amazon.it, eBay, MediaWorld) */
   store: string;
   /** Codice sconto/coupon da inserire al checkout, se presente */
@@ -45,6 +47,8 @@ export interface DealFilters {
   maxPrice: number | null;
   /** Mostra solo i possibili errori di prezzo */
   onlyPriceErrors: boolean;
+  /** Mostra solo le offerte con codice coupon */
+  onlyCoupons: boolean;
   /** Ricerca testuale sul titolo */
   query: string;
 }
@@ -60,6 +64,8 @@ export interface WatchItem {
   title: string;
   imageUrl: string;
   url: string;
+  /** Link diretto al prodotto, se disponibile */
+  productUrl: string | null;
   /** Prezzo registrato quando il prodotto è stato aggiunto ai preferiti (null se sconosciuto) */
   priceWhenAdded: number | null;
   store: string;
@@ -90,6 +96,7 @@ export const DEFAULT_FILTERS: DealFilters = {
   minDiscount: 0,
   maxPrice: null,
   onlyPriceErrors: false,
+  onlyCoupons: false,
   query: '',
 };
 

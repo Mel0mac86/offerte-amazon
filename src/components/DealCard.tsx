@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Deal, discountPercent } from '@/types';
 import { colors, radius, spacing } from '@/theme';
 import { formatEuro, timeAgo } from '@/utils/format';
-import { withAffiliateTag } from '@/services/amazonProvider';
+import { dealLink } from '@/services/amazonProvider';
 
 interface Props {
   deal: Deal;
@@ -17,7 +17,7 @@ export function DealCard({ deal, watched, onToggleWatch }: Props) {
   const [copied, setCopied] = useState(false);
 
   const open = () => {
-    Linking.openURL(withAffiliateTag(deal.url)).catch(() => {});
+    Linking.openURL(dealLink(deal)).catch(() => {});
   };
 
   const copyCoupon = async () => {

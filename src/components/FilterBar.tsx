@@ -81,6 +81,16 @@ export function FilterBar({ filters, onChange }: Props) {
           thumbColor="#fff"
         />
       </View>
+
+      <View style={styles.toggleRow}>
+        <Text style={styles.toggleLabel}>Solo con codice sconto 🎟️</Text>
+        <Switch
+          value={filters.onlyCoupons}
+          onValueChange={(onlyCoupons) => set({ onlyCoupons })}
+          trackColor={{ true: colors.accent, false: colors.border }}
+          thumbColor="#fff"
+        />
+      </View>
     </View>
   );
 }

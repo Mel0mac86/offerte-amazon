@@ -32,7 +32,8 @@ I feed predefiniti verificati sono SmartWorld, TuttoAndroid e **GizChina** (mult
 - 🏬 **Multi-negozio**: Amazon.it, AliExpress, MediaWorld ed altri; fonti attivabili in Impostazioni.
 - ➕ **Feed personalizzati**: aggiungi l'RSS di qualsiasi negozio/sito dall'app.
 - 🎟️ **Codici sconto/coupon**: estratti dagli articoli e copiabili con un tocco.
-- 🔎 **Filtri**: ricerca testo, categoria, sconto minimo, solo errori di prezzo.
+- 🔗 **Link diretto al prodotto**: quando l'articolo lo contiene, il tocco apre direttamente la scheda sul negozio (Amazon/AliExpress…), altrimenti l'articolo.
+- 🔎 **Filtri**: ricerca testo, categoria, sconto minimo, solo errori di prezzo, **solo con coupon**.
 - ★ **Preferiti/Watchlist**: segui un prodotto e ricevi un avviso quando il prezzo cala.
 - 📈 **Storico prezzi**: mini grafico per ogni preferito con prezzo minimo/attuale/massimo (il minimo è evidenziato in verde).
 - 🔔 **Notifiche locali on/off**: soglia di sconto configurabile, avvisi per errori di prezzo e cali dei preferiti.

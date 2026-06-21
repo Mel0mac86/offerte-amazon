@@ -73,11 +73,19 @@ function buildProvider(): DealsProvider {
 
 export const activeProvider: DealsProvider = buildProvider();
 
-/** Aggiunge il tag affiliato all'URL Amazon se configurato. */
+/** Aggiunge il tag affiliato a un URL prodotto Amazon "completo", se configurato. */
 export function withAffiliateTag(url: string): string {
   const extra = (Constants.expoConfig?.extra ?? {}) as { amazonAffiliateTag?: string };
   const tag = extra.amazonAffiliateTag;
-  if (!tag || !/amazon\./i.test(url)) return url;
+  if (!tag) return url;
+  // Non toccare i link accorciati/affiliati (es. amzn.to) o quelli che hanno già un tag.
+  if (/tag=/.test(url)) return url;
+  if (!/^https?:\/\/(www\.)?amazon\.[a-z.]+\//i.test(url)) return url;
   const sep = url.includes('?') ? '&' : '?';
   return `${url}${sep}tag=${encodeURIComponent(tag)}`;
+}
+
+/** URL da aprire per un'offerta: link diretto al prodotto se disponibile, altrimenti l'articolo. */
+export function dealLink(deal: { productUrl: string | null; url: string }): string {
+  return withAffiliateTag(deal.productUrl ?? deal.url);
 }

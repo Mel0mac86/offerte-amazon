@@ -169,6 +169,27 @@ function firstImage(html: string): string | null {
   return m ? m[1] : null;
 }
 
+// Link "accorciati" che puntano sempre a un prodotto.
+const SHORTENERS = /^https?:\/\/(amzn\.to|amzn\.eu|s\.click\.aliexpress\.com|ebay\.us|geni\.us|fas\.st|bit\.ly)\//i;
+
+function isProductLink(u: string): boolean {
+  if (SHORTENERS.test(u)) return true;
+  if (/amazon\.[a-z.]+\/(?:[^\s]*\/)?(?:dp|gp\/product|gp\/aw\/d)\/[A-Z0-9]/i.test(u)) return true;
+  if (/aliexpress\.[a-z.]+\/item\//i.test(u)) return true;
+  if (/ebay\.[a-z.]+\/itm\//i.test(u)) return true;
+  return false;
+}
+
+/** Estrae dal contenuto dell'articolo il primo link diretto al prodotto su un negozio. */
+function extractProductUrl(html: string): string | null {
+  const urls = html.match(/https?:\/\/[^\s"'<>]+/gi) ?? [];
+  for (const raw of urls) {
+    const u = raw.replace(/&amp;/g, '&').replace(/[).,]+$/, '');
+    if (isProductLink(u)) return u;
+  }
+  return null;
+}
+
 const FALLBACK_IMG = 'https://picsum.photos/seed/offerta/400/400';
 
 function mapItem(item: Record<string, unknown>, source: FeedSource): Deal | null {
@@ -189,11 +210,13 @@ function mapItem(item: Record<string, unknown>, source: FeedSource): Deal | null
   const discountPct = parseDiscount(richText);
   const { current, list } = parsePrices(richText);
   const couponCode = parseCoupon(richText);
+  const productUrl = extractProductUrl(contentHtml + ' ' + descHtml);
 
   return {
     id: guid,
     title,
     url: link,
+    productUrl,
     imageUrl: firstImage(contentHtml) ?? firstImage(descHtml) ?? FALLBACK_IMG,
     category: mapCategory(categories, title),
     currentPrice: current,

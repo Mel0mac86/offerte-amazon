@@ -7,6 +7,7 @@ export function applyFilters(deals: Deal[], filters: DealFilters): Deal[] {
     .filter((d) => {
       if (filters.category !== 'Tutte' && d.category !== filters.category) return false;
       if (filters.onlyPriceErrors && !d.isPriceError) return false;
+      if (filters.onlyCoupons && !d.couponCode) return false;
       if (filters.maxPrice != null) {
         // Senza prezzo noto non possiamo garantire il limite: escludiamo.
         if (d.currentPrice == null || d.currentPrice > filters.maxPrice) return false;

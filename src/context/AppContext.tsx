@@ -89,6 +89,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         w.map((item) => ({
           ...item,
           store: item.store ?? 'Amazon.it',
+          productUrl: item.productUrl ?? null,
           history: item.history?.length ? item.history : seedHistory(item.priceWhenAdded, item.priceWhenAdded),
         })),
       );
@@ -166,6 +167,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               title: deal.title,
               imageUrl: deal.imageUrl,
               url: deal.url,
+              productUrl: deal.productUrl,
               priceWhenAdded: deal.currentPrice,
               store: deal.store,
               addedAt: Date.now(),
