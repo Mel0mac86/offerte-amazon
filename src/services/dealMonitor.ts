@@ -30,21 +30,23 @@ export async function runDealCheck(): Promise<number> {
     if (seen.has(deal.id)) continue;
     const discount = discountPercent(deal);
 
-    const isStrongDeal = discount >= settings.notifyDiscountThreshold;
+    const isStrongDeal = discount != null && discount >= settings.notifyDiscountThreshold;
     const isError = settings.notifyPriceErrors && deal.isPriceError;
+    const priceLabel = deal.currentPrice != null ? ` a ${formatEuro(deal.currentPrice)}` : '';
+    const discLabel = discount != null ? ` (-${discount}%)` : '';
 
     if (isError) {
       await sendLocalNotification(
         '⚠️ Possibile errore di prezzo!',
-        `${deal.title} a ${formatEuro(deal.currentPrice)} (-${discount}%)`,
+        `${deal.title}${priceLabel}${discLabel}`,
         { url: deal.url },
       );
       notificationsSent++;
       newlySeen.push(deal.id);
     } else if (isStrongDeal) {
       await sendLocalNotification(
-        `🔥 Offerta -${discount}%`,
-        `${deal.title} a ${formatEuro(deal.currentPrice)}`,
+        `🔥 Offerta -${discount}% su ${deal.store}`,
+        `${deal.title}${priceLabel}`,
         { url: deal.url },
       );
       notificationsSent++;
@@ -75,7 +77,11 @@ export async function runDealCheck(): Promise<number> {
         watchlistChanged = true;
       }
 
-      if (settings.notifyWatchlistDrops && price < item.priceWhenAdded) {
+      if (
+        settings.notifyWatchlistDrops &&
+        item.priceWhenAdded != null &&
+        price < item.priceWhenAdded
+      ) {
         const drop = Math.round((1 - price / item.priceWhenAdded) * 100);
         if (drop >= 5) {
           await sendLocalNotification(

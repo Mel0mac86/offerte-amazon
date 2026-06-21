@@ -26,12 +26,16 @@ export function WatchlistScreen() {
           />
         }
         renderItem={({ item }) => {
-          const current = deals.find((d) => d.id === item.dealId)?.currentPrice ?? item.priceWhenAdded;
-          const drop = Math.round((1 - current / item.priceWhenAdded) * 100);
+          const livePrice = deals.find((d) => d.id === item.dealId)?.currentPrice;
+          const current = livePrice ?? item.priceWhenAdded;
+          const drop =
+            current != null && item.priceWhenAdded != null && item.priceWhenAdded > 0
+              ? Math.round((1 - current / item.priceWhenAdded) * 100)
+              : 0;
           // Storico per il grafico, includendo il prezzo live se più recente.
           const lastHistory = item.history[item.history.length - 1];
           const chartHistory =
-            lastHistory && lastHistory.price !== current
+            current != null && lastHistory && lastHistory.price !== current
               ? [...item.history, { t: Date.now(), price: current }]
               : item.history;
 
@@ -47,14 +51,16 @@ export function WatchlistScreen() {
                     {item.title}
                   </Text>
                   <View style={styles.priceRow}>
-                    <Text style={styles.price}>{formatEuro(current)}</Text>
-                    {drop > 0 ? (
-                      <Text style={styles.drop}>▼ -{drop}%</Text>
+                    {current != null ? (
+                      <Text style={styles.price}>{formatEuro(current)}</Text>
                     ) : (
-                      <Text style={styles.flat}>salvato a {formatEuro(item.priceWhenAdded)}</Text>
+                      <Text style={styles.flat}>prezzo non disponibile</Text>
                     )}
+                    {drop > 0 && <Text style={styles.drop}>▼ -{drop}%</Text>}
                   </View>
-                  <Text style={styles.meta}>Aggiunto {timeAgo(item.addedAt)}</Text>
+                  <Text style={styles.meta}>
+                    {item.store} · aggiunto {timeAgo(item.addedAt)}
+                  </Text>
                 </View>
                 <Pressable
                   hitSlop={10}
@@ -65,7 +71,10 @@ export function WatchlistScreen() {
                       imageUrl: item.imageUrl,
                       url: item.url,
                       currentPrice: item.priceWhenAdded,
-                      listPrice: item.priceWhenAdded,
+                      listPrice: null,
+                      discountPct: null,
+                      store: item.store,
+                      sourceId: 'watchlist',
                       category: 'Tutte',
                       isPriceError: false,
                       detectedAt: item.addedAt,

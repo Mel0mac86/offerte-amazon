@@ -12,17 +12,23 @@ export type Category =
   | 'Libri';
 
 export interface Deal {
-  /** ASIN o id univoco del prodotto */
+  /** ASIN o id univoco del prodotto/offerta */
   id: string;
   title: string;
   category: Category;
   imageUrl: string;
-  /** Prezzo attuale in euro */
-  currentPrice: number;
-  /** Prezzo di listino/precedente in euro */
-  listPrice: number;
-  /** URL del prodotto su Amazon.it */
+  /** Prezzo attuale in euro (null se non rilevabile dalla fonte) */
+  currentPrice: number | null;
+  /** Prezzo di listino/precedente in euro (null se sconosciuto) */
+  listPrice: number | null;
+  /** Sconto % dichiarato dalla fonte, quando non ricavabile dai prezzi */
+  discountPct: number | null;
+  /** URL del prodotto/offerta */
   url: string;
+  /** Negozio (es. Amazon.it, eBay, MediaWorld) */
+  store: string;
+  /** Id della fonte/feed da cui proviene l'offerta */
+  sourceId: string;
   /** True se l'algoritmo lo considera un possibile errore di prezzo */
   isPriceError: boolean;
   /** Timestamp (ms) di quando l'offerta è stata rilevata */
@@ -52,8 +58,9 @@ export interface WatchItem {
   title: string;
   imageUrl: string;
   url: string;
-  /** Prezzo registrato quando il prodotto è stato aggiunto ai preferiti */
-  priceWhenAdded: number;
+  /** Prezzo registrato quando il prodotto è stato aggiunto ai preferiti (null se sconosciuto) */
+  priceWhenAdded: number | null;
+  store: string;
   addedAt: number;
   /** Storico dei prezzi rilevati nel tempo (ordinato dal più vecchio al più recente) */
   history: PricePoint[];
@@ -96,7 +103,17 @@ export const CATEGORIES: Category[] = [
   'Libri',
 ];
 
-export function discountPercent(deal: Pick<Deal, 'currentPrice' | 'listPrice'>): number {
-  if (deal.listPrice <= 0) return 0;
-  return Math.round((1 - deal.currentPrice / deal.listPrice) * 100);
+export function discountPercent(
+  deal: Pick<Deal, 'currentPrice' | 'listPrice' | 'discountPct'>,
+): number | null {
+  if (deal.discountPct != null) return deal.discountPct;
+  if (
+    deal.listPrice != null &&
+    deal.currentPrice != null &&
+    deal.listPrice > 0 &&
+    deal.listPrice > deal.currentPrice
+  ) {
+    return Math.round((1 - deal.currentPrice / deal.listPrice) * 100);
+  }
+  return null;
 }

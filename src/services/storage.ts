@@ -6,6 +6,7 @@ const KEYS = {
   watchlist: '@offerte/watchlist',
   filters: '@offerte/filters',
   seenDealIds: '@offerte/seenDealIds',
+  enabledSources: '@offerte/enabledSources',
 };
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {
@@ -52,4 +53,14 @@ export const storage = {
     }
   },
   saveSeenDealIds: (ids: string[]) => writeJson(KEYS.seenDealIds, ids),
+
+  async getEnabledSourceIds(): Promise<string[]> {
+    try {
+      const raw = await AsyncStorage.getItem(KEYS.enabledSources);
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  },
+  saveEnabledSourceIds: (ids: string[]) => writeJson(KEYS.enabledSources, ids),
 };

@@ -28,9 +28,14 @@ export function DealCard({ deal, watched, onToggleWatch }: Props) {
               <Text style={styles.badgeText}>ERRORE PREZZO?</Text>
             </View>
           )}
-          <View style={[styles.badge, { backgroundColor: colors.accent }]}>
-            <Text style={[styles.badgeText, { color: '#1A1206' }]}>-{discount}%</Text>
+          <View style={[styles.badge, { backgroundColor: colors.surfaceAlt }]}>
+            <Text style={styles.badgeText}>{deal.store}</Text>
           </View>
+          {discount != null && (
+            <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+              <Text style={[styles.badgeText, { color: '#1A1206' }]}>-{discount}%</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.title} numberOfLines={2}>
@@ -38,8 +43,14 @@ export function DealCard({ deal, watched, onToggleWatch }: Props) {
         </Text>
 
         <View style={styles.priceRow}>
-          <Text style={styles.price}>{formatEuro(deal.currentPrice)}</Text>
-          <Text style={styles.listPrice}>{formatEuro(deal.listPrice)}</Text>
+          {deal.currentPrice != null ? (
+            <Text style={styles.price}>{formatEuro(deal.currentPrice)}</Text>
+          ) : (
+            <Text style={styles.seeOffer}>Vedi offerta ›</Text>
+          )}
+          {deal.listPrice != null && deal.currentPrice != null && deal.listPrice > deal.currentPrice && (
+            <Text style={styles.listPrice}>{formatEuro(deal.listPrice)}</Text>
+          )}
         </View>
 
         <View style={styles.footer}>
@@ -91,6 +102,7 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 14, fontWeight: '600', lineHeight: 19 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, marginTop: spacing.xs },
   price: { color: colors.success, fontSize: 18, fontWeight: '800' },
+  seeOffer: { color: colors.accent, fontSize: 15, fontWeight: '700' },
   listPrice: { color: colors.textMuted, fontSize: 13, textDecorationLine: 'line-through' },
   footer: {
     marginTop: spacing.sm,

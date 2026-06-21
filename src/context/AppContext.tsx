@@ -18,6 +18,12 @@ import {
   unregisterBackgroundCheck,
 } from '@/services/dealMonitor';
 import { recordPrices, seedHistory } from '@/services/priceHistory';
+import {
+  DEFAULT_FEEDS,
+  FeedSource,
+  getEnabledFeedIds,
+  setEnabledFeedIds,
+} from '@/services/sources/feeds';
 
 interface AppState {
   loading: boolean;
@@ -25,12 +31,15 @@ interface AppState {
   filters: DealFilters;
   settings: AppSettings;
   watchlist: WatchItem[];
+  sources: FeedSource[];
+  enabledSourceIds: string[];
   refreshDeals: () => Promise<void>;
   setFilters: (f: DealFilters) => void;
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
   setNotificationsEnabled: (enabled: boolean) => Promise<boolean>;
   toggleWatch: (deal: Deal) => void;
   isWatched: (dealId: string) => boolean;
+  toggleSource: (sourceId: string) => void;
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -41,6 +50,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [filters, setFiltersState] = useState<DealFilters>(DEFAULT_FILTERS);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [watchlist, setWatchlist] = useState<WatchItem[]>([]);
+  const [enabledSourceIds, setEnabledSourceIds] = useState<string[]>(getEnabledFeedIds());
 
   // Registra i prezzi correnti nello storico dei prodotti seguiti.
   const recordWatchPrices = useCallback((data: Deal[]) => {
@@ -61,10 +71,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Caricamento iniziale da storage
   useEffect(() => {
     (async () => {
-      const [s, f, w] = await Promise.all([
+      const [s, f, w, srcIds] = await Promise.all([
         storage.getSettings(),
         storage.getFilters(),
         storage.getWatchlist(),
+        storage.getEnabledSourceIds(),
       ]);
       setSettings(s);
       setFiltersState(f);
@@ -72,9 +83,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setWatchlist(
         w.map((item) => ({
           ...item,
+          store: item.store ?? 'Amazon.it',
           history: item.history?.length ? item.history : seedHistory(item.priceWhenAdded, item.priceWhenAdded),
         })),
       );
+      if (srcIds && srcIds.length > 0) {
+        setEnabledFeedIds(srcIds);
+        setEnabledSourceIds(srcIds);
+      }
       setLoading(false);
     })();
   }, []);
@@ -142,6 +158,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               imageUrl: deal.imageUrl,
               url: deal.url,
               priceWhenAdded: deal.currentPrice,
+              store: deal.store,
               addedAt: Date.now(),
               history: seedHistory(deal.currentPrice, deal.listPrice),
             },
@@ -157,6 +174,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [watchlist],
   );
 
+  const toggleSource = useCallback((sourceId: string) => {
+    setEnabledSourceIds((prev) => {
+      const next = prev.includes(sourceId)
+        ? prev.filter((id) => id !== sourceId)
+        : [...prev, sourceId];
+      setEnabledFeedIds(next);
+      storage.saveEnabledSourceIds(next);
+      return next;
+    });
+    // Aggiorna subito le offerte con le nuove fonti.
+    setFiltersState((f) => ({ ...f }));
+  }, []);
+
   const value = useMemo<AppState>(
     () => ({
       loading,
@@ -164,12 +194,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       filters,
       settings,
       watchlist,
+      sources: DEFAULT_FEEDS,
+      enabledSourceIds,
       refreshDeals,
       setFilters,
       updateSettings,
       setNotificationsEnabled,
       toggleWatch,
       isWatched,
+      toggleSource,
     }),
     [
       loading,
@@ -177,12 +210,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       filters,
       settings,
       watchlist,
+      enabledSourceIds,
       refreshDeals,
       setFilters,
       updateSettings,
       setNotificationsEnabled,
       toggleWatch,
       isWatched,
+      toggleSource,
     ],
   );
 

@@ -8,7 +8,8 @@ import { runDealCheck } from '@/services/dealMonitor';
 const THRESHOLDS = [30, 50, 70];
 
 export function SettingsScreen() {
-  const { settings, updateSettings, setNotificationsEnabled } = useApp();
+  const { settings, updateSettings, setNotificationsEnabled, sources, enabledSourceIds, toggleSource } =
+    useApp();
   const [busy, setBusy] = useState(false);
 
   const onToggleNotifications = async (enabled: boolean) => {
@@ -95,6 +96,23 @@ export function SettingsScreen() {
           </View>
         </Section>
 
+        <Section title="Fonti offerte (negozi)">
+          {sources.map((src) => (
+            <Row
+              key={src.id}
+              label={src.name}
+              description={`Feed: ${src.defaultStore}`}
+            >
+              <Switch
+                value={enabledSourceIds.includes(src.id)}
+                onValueChange={() => toggleSource(src.id)}
+                trackColor={{ true: colors.accent, false: colors.border }}
+                thumbColor="#fff"
+              />
+            </Row>
+          ))}
+        </Section>
+
         <Section title="Strumenti">
           <Pressable style={styles.button} onPress={testCheck}>
             <Text style={styles.buttonText}>Controlla offerte adesso</Text>
@@ -102,9 +120,9 @@ export function SettingsScreen() {
         </Section>
 
         <Text style={styles.note}>
-          Versione demo con dati Amazon.it di esempio. Per dati reali e gratuiti, collega le tue
-          chiavi della Product Advertising API (account Affiliato Amazon) in app.json. Vedi il
-          README per i dettagli.
+          Le offerte arrivano da feed RSS pubblici (gratis, senza affiliazione) e includono link al
+          negozio. I prezzi/sconti vengono estratti quando indicati nel testo. Per dati Amazon
+          ufficiali puoi collegare la PA-API in app.json (vedi README).
         </Text>
       </ScrollView>
     </SafeAreaView>

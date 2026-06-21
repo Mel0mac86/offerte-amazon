@@ -1,8 +1,14 @@
 # Offerte Amazon 📱🏷️
 
-App iPhone (React Native + Expo) per trovare **offerte** e possibili **errori di prezzo** su **Amazon.it**, con **notifiche attivabili/disattivabili**, filtri per categoria/sconto e una **watchlist** dei preferiti.
+App iPhone (React Native + Expo) per trovare **offerte** e possibili **errori di prezzo** su **Amazon.it** e altri negozi, con **notifiche attivabili/disattivabili**, filtri per categoria/sconto e una **watchlist** dei preferiti.
 
-> ⚠️ **Nota importante sui dati.** Non esiste una fonte Amazon *gratuita, legale e in tempo reale* per gli errori di prezzo. Per questo l'app parte con dati **demo realistici** di Amazon.it tramite un *provider* intercambiabile, ed è già predisposta per collegare gratuitamente la **PA-API ufficiale** (account Affiliato Amazon). Vedi più sotto.
+## Da dove arrivano le offerte (gratis, senza affiliazione)
+
+L'app legge **feed RSS pubblici** di community/siti di offerte (pensati per la sindacazione: usarli è gratis e legale, **nessun account o affiliazione richiesta**). I feed aggregano offerte di **più negozi** (Amazon.it, eBay, MediaWorld, ecc.), quindi l'app è multi-store. Le fonti sono attivabili singolarmente in **Impostazioni → Fonti offerte**.
+
+I feed forniscono titolo, immagine, link al negozio, data e — quando presente nel testo — sconto% e prezzo. Per ogni offerta l'app estrae questi dati in automatico; se la rete non è disponibile, mostra dei dati demo di esempio per non restare vuota.
+
+> In alternativa (opzionale) puoi collegare la **PA-API ufficiale** di Amazon (richiede account Affiliato approvato) inserendo le chiavi in `app.json`: vedi più sotto.
 
 ## Come provarla sull'iPhone (in 5 minuti)
 
@@ -20,7 +26,8 @@ App iPhone (React Native + Expo) per trovare **offerte** e possibili **errori di
 
 ## Funzionalità
 
-- 🏷️ **Offerte**: elenco con sconto %, prezzo barrato, badge "ERRORE PREZZO?", pull-to-refresh.
+- 🏷️ **Offerte reali da feed RSS**: titolo, immagine, badge negozio, sconto % quando disponibile, pull-to-refresh.
+- 🏬 **Multi-negozio**: Amazon.it ed altri store, con fonti attivabili in Impostazioni.
 - 🔎 **Filtri**: ricerca testo, categoria, sconto minimo, solo errori di prezzo.
 - ★ **Preferiti/Watchlist**: segui un prodotto e ricevi un avviso quando il prezzo cala.
 - 📈 **Storico prezzi**: mini grafico per ogni preferito con prezzo minimo/attuale/massimo (il minimo è evidenziato in verde).
@@ -40,15 +47,23 @@ src/
   screens/                   DealsScreen, WatchlistScreen, SettingsScreen
   components/                DealCard, FilterBar, EmptyState, PriceChart
   services/
-    amazonProvider.ts        Provider intercambiabile (Mock + stub PA-API)
+    amazonProvider.ts        Selezione provider (Feed RSS / Mock / stub PA-API)
+    feedProvider.ts          Aggrega più feed RSS + fallback demo
+    filter.ts                Filtri e deduplica offerte
+    sources/feeds.ts         Elenco feed RSS + gestione fonti attive
+    sources/rss.ts           Download e parsing RSS -> Deal
     storage.ts               Persistenza AsyncStorage
     notifications.ts         Permessi + notifiche locali
     dealMonitor.ts           Controllo offerte + task background
     priceHistory.ts          Storico prezzi (registrazione + statistiche)
-  data/mockDeals.ts          Dati demo Amazon.it
+  data/mockDeals.ts          Dati demo (fallback offline)
 ```
 
-## Collegare i dati reali (gratis con PA-API)
+## Aggiungere un negozio / una fonte
+
+Apri `src/services/sources/feeds.ts` e aggiungi un elemento a `DEFAULT_FEEDS` con l'URL del feed RSS del sito di offerte. L'app lo mostrerà tra le fonti attivabili in Impostazioni. Funziona con qualsiasi feed RSS di offerte (Amazon o altri negozi).
+
+## Collegare i dati Amazon ufficiali (opzionale, PA-API)
 
 1. Iscriviti al **Programma Affiliazione Amazon** e, una volta approvato, richiedi le chiavi della **Product Advertising API 5.0**.
 2. Inserisci le credenziali in `app.json`:

@@ -19,9 +19,14 @@ export function appendPoint(history: PricePoint[], price: number, now = Date.now
 }
 
 /** Crea uno storico iniziale plausibile dal prezzo di listino a quello attuale. */
-export function seedHistory(currentPrice: number, listPrice: number, now = Date.now()): PricePoint[] {
+export function seedHistory(
+  currentPrice: number | null,
+  listPrice: number | null,
+  now = Date.now(),
+): PricePoint[] {
+  if (currentPrice == null) return [];
   const day = 1000 * 60 * 60 * 24;
-  if (listPrice > currentPrice) {
+  if (listPrice != null && listPrice > currentPrice) {
     const mid = Math.round(((currentPrice + listPrice) / 2) * 100) / 100;
     return [
       { t: now - day * 6, price: listPrice },
