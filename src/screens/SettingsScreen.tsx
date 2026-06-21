@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/context/AppContext';
 import { colors, radius, spacing } from '@/theme';
@@ -8,9 +8,29 @@ import { runDealCheck } from '@/services/dealMonitor';
 const THRESHOLDS = [30, 50, 70];
 
 export function SettingsScreen() {
-  const { settings, updateSettings, setNotificationsEnabled, sources, enabledSourceIds, toggleSource } =
-    useApp();
+  const {
+    settings,
+    updateSettings,
+    setNotificationsEnabled,
+    sources,
+    enabledSourceIds,
+    toggleSource,
+    addCustomFeed,
+    removeCustomFeed,
+  } = useApp();
   const [busy, setBusy] = useState(false);
+  const [feedName, setFeedName] = useState('');
+  const [feedUrl, setFeedUrl] = useState('');
+
+  const onAddFeed = () => {
+    if (!/^https?:\/\//i.test(feedUrl.trim())) {
+      Alert.alert('URL non valido', "Inserisci l'indirizzo completo del feed RSS (https://…).");
+      return;
+    }
+    addCustomFeed(feedName, feedUrl);
+    setFeedName('');
+    setFeedUrl('');
+  };
 
   const onToggleNotifications = async (enabled: boolean) => {
     setBusy(true);
@@ -98,19 +118,45 @@ export function SettingsScreen() {
 
         <Section title="Fonti offerte (negozi)">
           {sources.map((src) => (
-            <Row
-              key={src.id}
-              label={src.name}
-              description={`Feed: ${src.defaultStore}`}
-            >
-              <Switch
-                value={enabledSourceIds.includes(src.id)}
-                onValueChange={() => toggleSource(src.id)}
-                trackColor={{ true: colors.accent, false: colors.border }}
-                thumbColor="#fff"
-              />
+            <Row key={src.id} label={src.name} description={src.defaultStore}>
+              <View style={styles.sourceControls}>
+                <Switch
+                  value={enabledSourceIds.includes(src.id)}
+                  onValueChange={() => toggleSource(src.id)}
+                  trackColor={{ true: colors.accent, false: colors.border }}
+                  thumbColor="#fff"
+                />
+                {src.custom && (
+                  <Pressable hitSlop={10} onPress={() => removeCustomFeed(src.id)}>
+                    <Text style={styles.removeFeed}>✕</Text>
+                  </Pressable>
+                )}
+              </View>
             </Row>
           ))}
+
+          <View style={styles.addFeed}>
+            <Text style={styles.addFeedTitle}>Aggiungi un feed (qualsiasi negozio)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nome (es. Il mio sito offerte)"
+              placeholderTextColor={colors.textMuted}
+              value={feedName}
+              onChangeText={setFeedName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="URL feed RSS (https://…/feed)"
+              placeholderTextColor={colors.textMuted}
+              value={feedUrl}
+              onChangeText={setFeedUrl}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+            <Pressable style={styles.addButton} onPress={onAddFeed}>
+              <Text style={styles.addButtonText}>+ Aggiungi feed</Text>
+            </Pressable>
+          </View>
         </Section>
 
         <Section title="Strumenti">
@@ -121,8 +167,9 @@ export function SettingsScreen() {
 
         <Text style={styles.note}>
           Le offerte arrivano da feed RSS pubblici (gratis, senza affiliazione) e includono link al
-          negozio. I prezzi/sconti vengono estratti quando indicati nel testo. Per dati Amazon
-          ufficiali puoi collegare la PA-API in app.json (vedi README).
+          negozio e, quando presenti, codici sconto copiabili. Prezzi/sconti/coupon vengono estratti
+          dal testo dell'articolo. Puoi aggiungere il feed di qualsiasi negozio qui sopra. Per dati
+          Amazon ufficiali puoi collegare la PA-API in app.json (vedi README).
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -211,6 +258,29 @@ const styles = StyleSheet.create({
   thresholdActive: { backgroundColor: colors.accent, borderColor: colors.accent },
   thresholdText: { color: colors.textMuted, fontWeight: '700' },
   thresholdTextActive: { color: '#1A1206' },
+  sourceControls: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  removeFeed: { color: colors.danger, fontSize: 16, fontWeight: '800' },
+  addFeed: { paddingVertical: spacing.md, gap: spacing.sm },
+  addFeedTitle: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  input: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    color: colors.text,
+    fontSize: 14,
+  },
+  addButton: {
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: radius.sm,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  addButtonText: { color: colors.accent, fontSize: 14, fontWeight: '800' },
   button: {
     backgroundColor: colors.accent,
     borderRadius: radius.sm,

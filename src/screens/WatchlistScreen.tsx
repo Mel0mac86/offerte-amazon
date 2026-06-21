@@ -74,6 +74,7 @@ export function WatchlistScreen() {
                       listPrice: null,
                       discountPct: null,
                       store: item.store,
+                      couponCode: null,
                       sourceId: 'watchlist',
                       category: 'Tutte',
                       isPriceError: false,

@@ -34,36 +34,87 @@ function decodeEntities(s: string): string {
     .trim();
 }
 
+/** Rimuove i tag HTML lasciando il testo. */
+function stripHtml(html: string): string {
+  return decodeEntities(html.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
 function toArray<T>(v: T | T[] | undefined): T[] {
   if (v == null) return [];
   return Array.isArray(v) ? v : [v];
 }
 
-/** Estrae lo sconto percentuale dal testo (es. "del 27%", "-32%"). */
-function parseDiscount(title: string): number | null {
-  const m = title.match(/(\d{1,2})\s*%/);
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  return n > 0 && n <= 95 ? n : null;
+/** Estrae lo sconto percentuale dal testo (es. "del 27%", "-32%", "fino al 50%"). */
+function parseDiscount(textBlob: string): number | null {
+  const matches = [...textBlob.matchAll(/(\d{1,2})\s*%/g)]
+    .map((m) => parseInt(m[1], 10))
+    .filter((n) => n > 0 && n <= 95);
+  if (matches.length === 0) return null;
+  // Prende lo sconto più alto citato (di solito quello "fino al ...%").
+  return Math.max(...matches);
 }
 
 function toNumber(raw: string): number | null {
-  const n = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+  // Gestisce formati "1.299,99" e "129,99" e "129"
+  let s = raw.trim();
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(s);
   return Number.isFinite(n) ? n : null;
 }
 
 /** Estrae prezzo attuale e di listino dal testo, in modo conservativo. */
-function parsePrices(text: string): { current: number | null; list: number | null } {
-  const current =
-    text.match(/(?:a soli|a solo|solo|a)\s*€?\s*(\d{1,4}(?:[.,]\d{1,2})?)\s*€/i)?.[1] ??
+function parsePrices(textBlob: string): { current: number | null; list: number | null } {
+  const currentRaw =
+    textBlob.match(/(?:a soli|a solo|a soltanto|solo|prezzo[^0-9]{0,12}|a)\s*€?\s*(\d{1,4}(?:[.,]\d{1,2})?)\s*€/i)?.[1] ??
+    textBlob.match(/€\s*(\d{1,4}(?:[.,]\d{1,2})?)/)?.[1] ??
     null;
-  const list =
-    text.match(/(?:invece di|anzich[eé]|anziche|listino|da)\s*€?\s*(\d{1,4}(?:[.,]\d{1,2})?)\s*€/i)?.[1] ??
+  const listRaw =
+    textBlob.match(/(?:invece di|anzich[eé]|anziche|listino|valore di|prezzo originale|da)\s*€?\s*(\d{1,4}(?:[.,]\d{1,2})?)\s*€/i)?.[1] ??
     null;
-  return {
-    current: current ? toNumber(current) : null,
-    list: list ? toNumber(list) : null,
-  };
+  const current = currentRaw ? toNumber(currentRaw) : null;
+  const list = listRaw ? toNumber(listRaw) : null;
+  // Coerenza: il listino deve essere maggiore del prezzo attuale.
+  if (current != null && list != null && list <= current) {
+    return { current, list: null };
+  }
+  return { current, list };
+}
+
+// Parole comuni che NON sono codici coupon (evita falsi positivi italiani/inglesi).
+const COUPON_STOPWORDS = new Set([
+  'ESCLUSIVO',
+  'ESCLUSIVI',
+  'SCONTO',
+  'CODICE',
+  'COUPON',
+  'OFFERTA',
+  'OFFERTE',
+  'PROMO',
+  'CREDITI',
+  'PENSATO',
+  'ATTIVI',
+  'DISPONIBILI',
+  'AMAZON',
+  'PRIME',
+]);
+
+/**
+ * Estrae un codice coupon. Richiede una parola di contesto (codice/coupon/code)
+ * seguita da un token "tipo codice": maiuscolo, 4-18 caratteri, con almeno una
+ * cifra OPPURE tutto maiuscolo, e non una parola comune.
+ */
+function parseCoupon(textBlob: string): string | null {
+  const re = /(?:codice|coupon|code)\s*(?:sconto|promozionale)?\s*[:\s"'»]+\s*([A-Z0-9][A-Z0-9_-]{3,17})/gi;
+  for (const m of textBlob.matchAll(re)) {
+    const token = m[1].toUpperCase();
+    const hasDigit = /[0-9]/.test(token);
+    const allUpperLetters = /^[A-Z0-9_-]+$/.test(m[1]) && m[1] === m[1].toUpperCase();
+    if (COUPON_STOPWORDS.has(token)) continue;
+    if (hasDigit || (allUpperLetters && token.replace(/[^A-Z]/g, '').length >= 4)) {
+      return token;
+    }
+  }
+  return null;
 }
 
 const KNOWN_STORES = [
@@ -73,11 +124,22 @@ const KNOWN_STORES = [
   'Unieuro',
   'Euronics',
   'AliExpress',
+  'Geekbuying',
+  'Banggood',
   'Comet',
   'Trony',
+  'Monclick',
 ];
 
 function detectStore(categories: string[], haystack: string, fallback: string): string {
+  // 1) I siti tipo GizChina mettono il negozio tra le categorie.
+  for (const cat of categories) {
+    const c = cat.trim().toLowerCase();
+    if (c.includes('amazon')) return 'Amazon.it';
+    const known = KNOWN_STORES.find((s) => s.toLowerCase() === c);
+    if (known) return known;
+  }
+  // 2) Altrimenti cerca il nome del negozio nel testo.
   const hay = (categories.join(' ') + ' ' + haystack).toLowerCase();
   if (hay.includes('amazon')) return 'Amazon.it';
   for (const s of KNOWN_STORES) {
@@ -91,7 +153,8 @@ function mapCategory(categories: string[], title: string): Category {
   const has = (...keys: string[]) => keys.some((k) => hay.includes(k));
   if (has('pc', 'informatic', 'monitor', 'ssd', 'notebook', 'portatile', 'router', 'hard disk'))
     return 'Informatica';
-  if (has('casa', 'cucina', 'aspirapolvere', 'pentol', 'arred', 'elettrodomestic')) return 'Casa';
+  if (has('casa', 'cucina', 'aspirapolvere', 'pentol', 'arred', 'elettrodomestic', 'robot'))
+    return 'Casa';
   if (has('gioch', 'console', 'lego', 'playstation', 'xbox', 'nintendo', 'videogioco'))
     return 'Giochi';
   if (has('moda', 'abbigli', 'scarpe', 'orolog', 'zaino')) return 'Moda';
@@ -113,25 +176,31 @@ function mapItem(item: Record<string, unknown>, source: FeedSource): Deal | null
   const link = text(item.link).trim();
   if (!title || !link) return null;
 
-  const descHtml = text(item.description) + ' ' + text(item['content:encoded']);
+  // Legge sia la descrizione sia il contenuto completo dell'articolo (content:encoded).
+  const descHtml = text(item.description);
+  const contentHtml = text(item['content:encoded']);
+  const richText = title + ' ' + stripHtml(contentHtml) + ' ' + stripHtml(descHtml);
+
   const categories = toArray(item.category).map((c) => decodeEntities(text(c)));
   const guid = text(item.guid) || link;
   const pub = text(item.pubDate);
   const detectedAt = pub ? Date.parse(pub) || Date.now() : Date.now();
 
-  const discountPct = parseDiscount(title);
-  const { current, list } = parsePrices(title + ' ' + descHtml);
+  const discountPct = parseDiscount(richText);
+  const { current, list } = parsePrices(richText);
+  const couponCode = parseCoupon(richText);
 
   return {
     id: guid,
     title,
     url: link,
-    imageUrl: firstImage(descHtml) ?? FALLBACK_IMG,
+    imageUrl: firstImage(contentHtml) ?? firstImage(descHtml) ?? FALLBACK_IMG,
     category: mapCategory(categories, title),
     currentPrice: current,
     listPrice: list,
     discountPct,
     store: detectStore(categories, title, source.defaultStore),
+    couponCode,
     sourceId: source.id,
     isPriceError: discountPct != null && discountPct >= 70,
     detectedAt,

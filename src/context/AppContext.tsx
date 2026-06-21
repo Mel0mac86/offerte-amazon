@@ -22,6 +22,7 @@ import {
   DEFAULT_FEEDS,
   FeedSource,
   getEnabledFeedIds,
+  setCustomFeeds,
   setEnabledFeedIds,
 } from '@/services/sources/feeds';
 
@@ -40,6 +41,8 @@ interface AppState {
   toggleWatch: (deal: Deal) => void;
   isWatched: (dealId: string) => boolean;
   toggleSource: (sourceId: string) => void;
+  addCustomFeed: (name: string, url: string) => void;
+  removeCustomFeed: (sourceId: string) => void;
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -51,6 +54,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [watchlist, setWatchlist] = useState<WatchItem[]>([]);
   const [enabledSourceIds, setEnabledSourceIds] = useState<string[]>(getEnabledFeedIds());
+  const [customFeeds, setCustomFeedsState] = useState<FeedSource[]>([]);
 
   // Registra i prezzi correnti nello storico dei prodotti seguiti.
   const recordWatchPrices = useCallback((data: Deal[]) => {
@@ -71,11 +75,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Caricamento iniziale da storage
   useEffect(() => {
     (async () => {
-      const [s, f, w, srcIds] = await Promise.all([
+      const [s, f, w, srcIds, custom] = await Promise.all([
         storage.getSettings(),
         storage.getFilters(),
         storage.getWatchlist(),
         storage.getEnabledSourceIds(),
+        storage.getCustomFeeds(),
       ]);
       setSettings(s);
       setFiltersState(f);
@@ -87,6 +92,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           history: item.history?.length ? item.history : seedHistory(item.priceWhenAdded, item.priceWhenAdded),
         })),
       );
+      if (custom && custom.length > 0) {
+        setCustomFeeds(custom);
+        setCustomFeedsState(custom);
+      }
       if (srcIds && srcIds.length > 0) {
         setEnabledFeedIds(srcIds);
         setEnabledSourceIds(srcIds);
@@ -187,6 +196,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFiltersState((f) => ({ ...f }));
   }, []);
 
+  const addCustomFeed = useCallback((name: string, url: string) => {
+    const trimmedUrl = url.trim();
+    const trimmedName = name.trim() || trimmedUrl.replace(/^https?:\/\//, '').split('/')[0];
+    if (!/^https?:\/\//i.test(trimmedUrl)) return;
+    const source: FeedSource = {
+      id: `custom-${Date.now()}`,
+      name: trimmedName,
+      url: trimmedUrl,
+      defaultStore: 'Personalizzato',
+      custom: true,
+    };
+    setCustomFeedsState((prev) => {
+      const next = [...prev, source];
+      setCustomFeeds(next);
+      storage.saveCustomFeeds(next);
+      return next;
+    });
+    setEnabledSourceIds((prev) => {
+      const next = [...prev, source.id];
+      setEnabledFeedIds(next);
+      storage.saveEnabledSourceIds(next);
+      return next;
+    });
+    setFiltersState((f) => ({ ...f }));
+  }, []);
+
+  const removeCustomFeed = useCallback((sourceId: string) => {
+    setCustomFeedsState((prev) => {
+      const next = prev.filter((s) => s.id !== sourceId);
+      setCustomFeeds(next);
+      storage.saveCustomFeeds(next);
+      return next;
+    });
+    setEnabledSourceIds((prev) => {
+      const next = prev.filter((id) => id !== sourceId);
+      setEnabledFeedIds(next);
+      storage.saveEnabledSourceIds(next);
+      return next;
+    });
+    setFiltersState((f) => ({ ...f }));
+  }, []);
+
   const value = useMemo<AppState>(
     () => ({
       loading,
@@ -194,7 +245,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       filters,
       settings,
       watchlist,
-      sources: DEFAULT_FEEDS,
+      sources: [...DEFAULT_FEEDS, ...customFeeds],
       enabledSourceIds,
       refreshDeals,
       setFilters,
@@ -203,6 +254,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toggleWatch,
       isWatched,
       toggleSource,
+      addCustomFeed,
+      removeCustomFeed,
     }),
     [
       loading,
@@ -210,6 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       filters,
       settings,
       watchlist,
+      customFeeds,
       enabledSourceIds,
       refreshDeals,
       setFilters,
@@ -218,6 +272,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toggleWatch,
       isWatched,
       toggleSource,
+      addCustomFeed,
+      removeCustomFeed,
     ],
   );
 

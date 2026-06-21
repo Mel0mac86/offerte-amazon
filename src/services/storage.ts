@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppSettings, DEFAULT_SETTINGS, DealFilters, DEFAULT_FILTERS, WatchItem } from '@/types';
+import { FeedSource } from '@/services/sources/feeds';
 
 const KEYS = {
   settings: '@offerte/settings',
@@ -7,6 +8,7 @@ const KEYS = {
   filters: '@offerte/filters',
   seenDealIds: '@offerte/seenDealIds',
   enabledSources: '@offerte/enabledSources',
+  customFeeds: '@offerte/customFeeds',
 };
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {
@@ -63,4 +65,14 @@ export const storage = {
     }
   },
   saveEnabledSourceIds: (ids: string[]) => writeJson(KEYS.enabledSources, ids),
+
+  async getCustomFeeds(): Promise<FeedSource[]> {
+    try {
+      const raw = await AsyncStorage.getItem(KEYS.customFeeds);
+      return raw ? (JSON.parse(raw) as FeedSource[]) : [];
+    } catch {
+      return [];
+    }
+  },
+  saveCustomFeeds: (feeds: FeedSource[]) => writeJson(KEYS.customFeeds, feeds),
 };

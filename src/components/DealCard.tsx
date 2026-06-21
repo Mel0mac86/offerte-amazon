@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Deal, discountPercent } from '@/types';
 import { colors, radius, spacing } from '@/theme';
 import { formatEuro, timeAgo } from '@/utils/format';
@@ -13,9 +14,17 @@ interface Props {
 
 export function DealCard({ deal, watched, onToggleWatch }: Props) {
   const discount = discountPercent(deal);
+  const [copied, setCopied] = useState(false);
 
   const open = () => {
     Linking.openURL(withAffiliateTag(deal.url)).catch(() => {});
+  };
+
+  const copyCoupon = async () => {
+    if (!deal.couponCode) return;
+    await Clipboard.setStringAsync(deal.couponCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
@@ -52,6 +61,20 @@ export function DealCard({ deal, watched, onToggleWatch }: Props) {
             <Text style={styles.listPrice}>{formatEuro(deal.listPrice)}</Text>
           )}
         </View>
+
+        {deal.couponCode && (
+          <Pressable
+            style={[styles.coupon, copied && styles.couponCopied]}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              copyCoupon();
+            }}
+          >
+            <Text style={styles.couponLabel}>🏷️ Codice</Text>
+            <Text style={styles.couponCode}>{deal.couponCode}</Text>
+            <Text style={styles.couponAction}>{copied ? '✓ Copiato' : 'Copia'}</Text>
+          </Pressable>
+        )}
 
         <View style={styles.footer}>
           <Text style={styles.meta}>
@@ -104,6 +127,29 @@ const styles = StyleSheet.create({
   price: { color: colors.success, fontSize: 18, fontWeight: '800' },
   seeOffer: { color: colors.accent, fontSize: 15, fontWeight: '700' },
   listPrice: { color: colors.textMuted, fontSize: 13, textDecorationLine: 'line-through' },
+  coupon: {
+    marginTop: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderStyle: 'dashed',
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  couponCopied: { borderColor: colors.success, borderStyle: 'solid' },
+  couponLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
+  couponCode: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  couponAction: { color: colors.accent, fontSize: 11, fontWeight: '800' },
   footer: {
     marginTop: spacing.sm,
     flexDirection: 'row',

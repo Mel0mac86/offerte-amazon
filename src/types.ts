@@ -27,6 +27,8 @@ export interface Deal {
   url: string;
   /** Negozio (es. Amazon.it, eBay, MediaWorld) */
   store: string;
+  /** Codice sconto/coupon da inserire al checkout, se presente */
+  couponCode: string | null;
   /** Id della fonte/feed da cui proviene l'offerta */
   sourceId: string;
   /** True se l'algoritmo lo considera un possibile errore di prezzo */

@@ -6,7 +6,9 @@ App iPhone (React Native + Expo) per trovare **offerte** e possibili **errori di
 
 L'app legge **feed RSS pubblici** di community/siti di offerte (pensati per la sindacazione: usarli è gratis e legale, **nessun account o affiliazione richiesta**). I feed aggregano offerte di **più negozi** (Amazon.it, eBay, MediaWorld, ecc.), quindi l'app è multi-store. Le fonti sono attivabili singolarmente in **Impostazioni → Fonti offerte**.
 
-I feed forniscono titolo, immagine, link al negozio, data e — quando presente nel testo — sconto% e prezzo. Per ogni offerta l'app estrae questi dati in automatico; se la rete non è disponibile, mostra dei dati demo di esempio per non restare vuota.
+I feed forniscono titolo, immagine, link al negozio e data. L'app legge anche il **contenuto completo dell'articolo** (`content:encoded`) per estrarre, quando presenti, **prezzo**, **sconto %**, **negozio** e **codice coupon**. Se la rete non è disponibile, mostra dei dati demo di esempio per non restare vuota.
+
+I feed predefiniti verificati sono SmartWorld, TuttoAndroid e **GizChina** (multi-negozio e ricco di coupon: Amazon, AliExpress, MediaWorld…). In **Impostazioni → Fonti offerte** puoi attivarli/disattivarli e **aggiungere il feed RSS di qualsiasi altro negozio**.
 
 > In alternativa (opzionale) puoi collegare la **PA-API ufficiale** di Amazon (richiede account Affiliato approvato) inserendo le chiavi in `app.json`: vedi più sotto.
 
@@ -26,8 +28,10 @@ I feed forniscono titolo, immagine, link al negozio, data e — quando presente 
 
 ## Funzionalità
 
-- 🏷️ **Offerte reali da feed RSS**: titolo, immagine, badge negozio, sconto % quando disponibile, pull-to-refresh.
-- 🏬 **Multi-negozio**: Amazon.it ed altri store, con fonti attivabili in Impostazioni.
+- 🏷️ **Offerte reali da feed RSS**: titolo, immagine, badge negozio, prezzo e sconto % quando disponibili, pull-to-refresh.
+- 🏬 **Multi-negozio**: Amazon.it, AliExpress, MediaWorld ed altri; fonti attivabili in Impostazioni.
+- ➕ **Feed personalizzati**: aggiungi l'RSS di qualsiasi negozio/sito dall'app.
+- 🎟️ **Codici sconto/coupon**: estratti dagli articoli e copiabili con un tocco.
 - 🔎 **Filtri**: ricerca testo, categoria, sconto minimo, solo errori di prezzo.
 - ★ **Preferiti/Watchlist**: segui un prodotto e ricevi un avviso quando il prezzo cala.
 - 📈 **Storico prezzi**: mini grafico per ogni preferito con prezzo minimo/attuale/massimo (il minimo è evidenziato in verde).
