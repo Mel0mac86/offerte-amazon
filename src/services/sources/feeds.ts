@@ -28,7 +28,28 @@ export const DEFAULT_FEEDS: FeedSource[] = [
     url: 'https://www.tuttoandroid.net/offerte/feed/',
     defaultStore: 'Amazon.it',
   },
+  {
+    id: 'gizchina',
+    name: 'GizChina.it — Offerte (link diretti)',
+    url: 'https://www.gizchina.it/category/offerte/feed/',
+    defaultStore: 'Amazon.it',
+  },
+  {
+    id: 'ispazio',
+    name: 'iSpazio — Offerte',
+    url: 'https://www.ispazio.net/feed',
+    defaultStore: 'Amazon.it',
+  },
+  {
+    id: 'telefonino',
+    name: 'Telefonino.net — Offerte',
+    url: 'https://www.telefonino.net/feed/',
+    defaultStore: 'Amazon.it',
+  },
 ];
+
+// Negozi da NON mostrare mai (es. su richiesta dell'utente).
+export const EXCLUDED_STORES = ['AliExpress', 'Banggood', 'Geekbuying'];
 
 // Stato runtime (impostato dall'app all'avvio in base alle preferenze salvate).
 let customFeeds: FeedSource[] = [];

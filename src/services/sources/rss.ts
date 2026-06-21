@@ -137,6 +137,10 @@ const KNOWN_STORES = [
   'Comet',
   'Trony',
   'Monclick',
+  // Riconosciuti per poterli ESCLUDERE (vedi EXCLUDED_STORES in feeds.ts)
+  'AliExpress',
+  'Banggood',
+  'Geekbuying',
 ];
 
 function detectStore(categories: string[], haystack: string, fallback: string): string {

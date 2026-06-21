@@ -1,8 +1,12 @@
 import { Deal, DealFilters } from '@/types';
 import { applyFilters, dedupeDeals } from '@/services/filter';
-import { getEnabledFeeds } from '@/services/sources/feeds';
+import { EXCLUDED_STORES, getEnabledFeeds } from '@/services/sources/feeds';
 import { fetchFeed } from '@/services/sources/rss';
 import { MOCK_DEALS } from '@/data/mockDeals';
+
+function isExcluded(deal: Deal): boolean {
+  return EXCLUDED_STORES.some((s) => s.toLowerCase() === deal.store.toLowerCase());
+}
 
 export interface DealsProvider {
   readonly id: string;
@@ -28,7 +32,10 @@ export class FeedProvider implements DealsProvider {
       for (const r of results) {
         if (r.status === 'fulfilled') merged.push(...r.value);
       }
-      merged = dedupeDeals(merged).sort((a, b) => b.detectedAt - a.detectedAt);
+      // Esclude i negozi indesiderati (es. AliExpress) e deduplica.
+      merged = dedupeDeals(merged.filter((d) => !isExcluded(d))).sort(
+        (a, b) => b.detectedAt - a.detectedAt,
+      );
     }
 
     if (merged.length === 0) {
